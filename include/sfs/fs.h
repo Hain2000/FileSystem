@@ -3,7 +3,7 @@
 #pragma once
 
 #include "sfs/disk.h"
-
+#include <vector>
 #include <stdint.h>
 
 class FileSystem {
@@ -23,11 +23,12 @@ private:
 
     struct Inode {
     	uint32_t Valid;		// Whether or not inode is valid
-    	uint32_t Size;		// Size of file
+    	uint32_t Size;		// Size of file 数据块中的大小
     	uint32_t Direct[POINTERS_PER_INODE]; // Direct pointers
     	uint32_t Indirect;	// Indirect pointer
     };
 
+    // 一个块大小为4096bytes，存 1超级块 或 128个Inode 或 1024个间接指针
     union Block {
     	SuperBlock  Super;			    // Superblock
     	Inode	    Inodes[INODES_PER_BLOCK];	    // Inode block
@@ -36,8 +37,17 @@ private:
     };
 
     // TODO: Internal helper functions
+    bool load_inode(Inode *inode, size_t inumber);
+    bool save_inode(Inode *inode, size_t inumber);
+    void make_inode(Inode &inode, bool valid);
+    ssize_t allocate_free_block();
 
     // TODO: Internal member variables
+    Disk *disk_;
+    uint32_t blocks_num_;
+    uint32_t inode_blocks_num_;
+    uint32_t inodes_num_;
+    std::vector<int> bitmap_;
 
 public:
     static void debug(Disk *disk);
